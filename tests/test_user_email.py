@@ -18,13 +18,30 @@ class TestUserEmailExtraction:
         )
         assert CloudTrailEvent(event).user_email == "paul@cloudandthings.io"
 
-    def test_principal_id_without_email_falls_through(self):
+    def test_principal_id_without_email_falls_back_to_session_name(self):
         event = _make_event(
             {
                 "principalId": "AROAXK4KVD27BINQTHSKU:my-session-name",
             }
         )
-        assert CloudTrailEvent(event).user_email == "Unknown"
+        assert CloudTrailEvent(event).user_email == "my-session-name"
+
+    def test_assumed_role_non_email_session_uses_role_and_session(self):
+        event = _make_event(
+            {
+                "type": "AssumedRole",
+                "principalId": "AROAXK4KVD27BINQTHSKU:jdoe",
+                "arn": "arn:aws:sts::123456789012:assumed-role/admin/jdoe",
+                "sessionContext": {
+                    "sessionIssuer": {
+                        "type": "Role",
+                        "arn": "arn:aws:iam::123456789012:role/admin",
+                        "userName": "admin",
+                    }
+                },
+            }
+        )
+        assert CloudTrailEvent(event).user_email == "admin/jdoe"
 
     def test_principal_id_no_colon(self):
         event = _make_event(

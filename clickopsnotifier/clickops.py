@@ -68,6 +68,23 @@ class CloudTrailEvent:
             )
             return user_identity["userName"]
 
+        return CloudTrailEvent.__session_name(user_identity)
+
+    @staticmethod
+    def __session_name(user_identity) -> str:
+        # Assumed roles with non-email sessions have no top-level userName,
+        # e.g. "arn:aws:sts::123456789012:assumed-role/admin/jdoe" -> "admin/jdoe"
+        if ":assumed-role/" in user_identity.get("arn", ""):
+            session = user_identity["arn"].split(":assumed-role/", 1)[1]
+            logger.debug("No email found, falling back to session '%s'", session)
+            return session
+
+        # e.g. "AROAXK4KVD27BINQTHSKU:jdoe" -> "jdoe"
+        parts = user_identity.get("principalId", "").split(":", 1)
+        if len(parts) > 1 and parts[1]:
+            logger.debug("No email found, falling back to session '%s'", parts[1])
+            return parts[1]
+
         logger.debug("No email or userName found in userIdentity, returning Unknown")
         return "Unknown"
 
