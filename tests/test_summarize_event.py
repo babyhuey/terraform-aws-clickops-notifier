@@ -27,7 +27,7 @@ class TestSummarizeEvent:
         assert "userAgent" in result
         assert "recipientAccountId" in result
         assert "resources" in result
-        assert "requestParameters" not in result
+        assert result["requestParameters"] == {"keyId": "abc"}
         assert "responseElements" not in result
         assert "eventID" not in result
         assert "requestID" not in result
@@ -64,3 +64,13 @@ class TestSummarizeEvent:
         event = {"resources": resources}
         result = _summarize_event(event)
         assert result["resources"] == resources
+
+
+    def test_request_parameters_is_last(self):
+        event = {
+            "requestParameters": {"stackName": "datadog-forwarder"},
+            "eventName": "DeleteStack",
+            "resources": [],
+        }
+        result = _summarize_event(event)
+        assert list(result) == ["eventName", "resources", "requestParameters"]

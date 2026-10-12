@@ -6,8 +6,9 @@ import re
 WEBHOOK_NAME_REGEXP = r".*webhooks-for-.*?\/(.*)"
 
 # Fields to include in notification event output.
-# Everything else (requestParameters, responseElements, sessionContext,
-# eventId, requestId, etc.) is stripped to reduce noise.
+# Everything else (responseElements, sessionContext, eventId, requestId,
+# etc.) is stripped to reduce noise. requestParameters stays last so Slack
+# truncation cuts it before the summary fields above it.
 EVENT_SUMMARY_FIELDS = [
     "eventTime",
     "eventSource",
@@ -17,6 +18,7 @@ EVENT_SUMMARY_FIELDS = [
     "userAgent",
     "recipientAccountId",
     "resources",
+    "requestParameters",
 ]
 
 logger = logging.getLogger(__name__)
